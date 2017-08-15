@@ -1,3 +1,8 @@
+/*
+ * The producer–consumer problem (also known as the bounded-buffer problem)
+ * is a classic example of a multi-process synchronization problem.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -13,8 +18,8 @@ pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;		// mutex lock for buffer
 pthread_cond_t c_cons = PTHREAD_COND_INITIALIZER;	// consumer waits on this condition variable
 pthread_cond_t c_prod = PTHREAD_COND_INITIALIZER;	// producer waits on this condition variable
 
-void *producer (void *param);
-void *consumer (void *param);
+void *producer(void *param);
+void *consumer(void *param);
 
 int main(int argc, char *argv[]) {
 
@@ -35,7 +40,7 @@ int main(int argc, char *argv[]) {
 	// wait for created thread to exit
 	pthread_join(tid1, NULL);
 	pthread_join(tid2, NULL);
-	printf("Parent quiting\n");
+	printf("Parent quitting\n");
 
 	return 0;
 }
@@ -47,24 +52,24 @@ void *producer(void *param) {
 	for (i=1; i<=20; i++) {
 
 		// Insert into buffer
-		pthread_mutex_lock (&m);
+		pthread_mutex_lock(&m);
 			if (num > BUF_SIZE) {		// overflow
 				exit(1);
 			}
 
 			while (num == BUF_SIZE) {	// block if buffer is full
-				pthread_cond_wait (&c_prod, &m);
+				pthread_cond_wait(&c_prod, &m);
 			}
 
 			// if executing here, buffer not full so add element
 			buffer[add] = i;
 			add = (add+1) % BUF_SIZE;
 			num++;
-		pthread_mutex_unlock (&m);
+		pthread_mutex_unlock(&m);
 
-		pthread_cond_signal (&c_cons);
-		printf ("producer: inserted %d\n", i);
-		fflush (stdout);
+		pthread_cond_signal(&c_cons);
+		printf("producer: inserted %d\n", i);
+		fflush(stdout);
 	}
 
 	printf("producer quiting\n");
@@ -76,27 +81,25 @@ void *producer(void *param) {
 void *consumer(void *param) {
 
 	int i;
-
 	while(1) {
-
-		pthread_mutex_lock (&m);
+		pthread_mutex_lock(&m);
 			if (num < 0) {
 				exit(1);
 			}					// underflow
 
 			while (num == 0) {	// block if buffer empty
-				pthread_cond_wait (&c_cons, &m);
+				pthread_cond_wait(&c_cons, &m);
 			}
 
 			// if executing here, buffer not empty so remove element
 			i = buffer[rem];
 			rem = (rem+1) % BUF_SIZE;
 			num--;
-		pthread_mutex_unlock (&m);
+		pthread_mutex_unlock(&m);
 
-		pthread_cond_signal (&c_prod);
-		printf ("Consume value %d\n", i);  fflush(stdout);
-
+		pthread_cond_signal(&c_prod);
+		printf("Consume value %d\n", i);
+		fflush(stdout);
 	}
 	return 0;
 }
